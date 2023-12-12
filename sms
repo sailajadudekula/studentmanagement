@@ -1,0 +1,246 @@
+package com.example.Student;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import com.example.Student.repository.StudentRepository;
+
+@SpringBootApplication
+public class StudentApplication implements CommandLineRunner {
+	@Autowired
+	   private StudentRepository studentRepository;
+		@Override
+		public void run(String... args) throws Exception {
+			// TODO Auto-generated method stub
+			
+//		Student student1 =new Student("vasu","jala","vasu@gmail.com");
+//			studentRepository.save(student1);
+			
+//			Student student2 =new Student("manohor","surepally","manu@gmail.com");	
+//			studentRepository.save(student2);
+//			
+//			Student student3 =new Student("venu","jala","venu@gmail.com");
+//			studentRepository.save(student3);
+			
+			//Student student4 =new Student("ramu","dandi","ramu@gmail.com");
+		  // studentRepository.save(student4);
+
+		}
+}
+
+package com.example.Student.Controller;
+
+import org.springframework.stereotype.Controller;
+
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import com.example.Student.service.StudentService;
+import com.example.Student.entity.Student;
+
+@Controller
+public class StudentController {
+
+	private StudentService studentService;
+
+	public StudentController(StudentService studentService) {
+		super();
+		this.studentService = studentService;
+	}
+	//handler method to handle list students and return mode view;
+	@GetMapping("/students")
+	public String listStudents (Model model) {
+		model.addAttribute("students", studentService.getAllStudents());
+		return "students";
+		
+}
+	
+	@GetMapping("/students/new")
+	public String createStudentForm(Model model) {
+	//create student object to hold student from data
+	Student student =new Student();
+	 model .addAttribute ("student", student);
+	return "create_student";
+	}
+	@PostMapping("/students")
+	public String saveStudent(@ModelAttribute("student") Student student) {
+		studentService.saveStudent(student);
+		return "redirect:/students";
+}
+	@GetMapping("/students/edit/{id}")
+	public String editStudentForm(@PathVariable int id,Model model) {
+		model.addAttribute("student",studentService.getStudentById(id));
+		return"edit_student";
+}
+	@PostMapping("/students/{id}")
+	public String updateStudent(@PathVariable int id,
+			@ModelAttribute("student") Student student,
+			Model model) {
+		
+		//get student from database by id
+		Student existingStudent = studentService.getStudentById(id);
+		existingStudent.setId(id);
+		existingStudent.setFirstName(student.getFirstName());
+		existingStudent.setLastName(student.getLastName());
+		existingStudent.setEmail(student.getEmail());
+		
+		//save updated student object
+		studentService.updateStudent(existingStudent);
+		return "redirect:/students";
+}
+	//handler method to handle delete request
+		@GetMapping("/students/{id}")
+		public String deleteStudent(@PathVariable int id) {
+			studentService.deleteStudentById(id);
+			return "redirect:/students";
+			
+}
+}
+
+package com.example.Student.entity;
+
+import jakarta.persistence.Column;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "students")
+public class Student {
+   
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	
+	@Column(name ="first_name",nullable = false)
+	private String firstName;
+	
+	@Column(name ="last_name")
+	private String lastName;
+	
+	@Column(name ="email")
+	private String email;
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getFirstName() {
+		return firstName;
+	}
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+	public String getLastName() {
+		return lastName;
+	}
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public Student() {
+		
+	}
+	public Student(String firstName, String lastName, String email) {
+		super();
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.email = email;
+	}
+}
+package com.example.Student.repository;
+
+	import org.springframework.data.jpa.repository.JpaRepository;
+
+	import com.example.Student.entity.Student;
+
+	public interface StudentRepository extends JpaRepository<Student, Integer> {
+		
+
+	}
+	package com.example.Student.service;
+
+	import java.util.List;
+
+	import com.example.Student.entity.Student;
+
+	public interface StudentService {
+
+		List<Student> getAllStudents();
+		
+		Student saveStudent(Student student);
+		 
+		 Student getStudentById(int id);
+		 
+		 Student updateStudent(Student student);
+		 
+		 void deleteStudentById(int id);
+
+}
+
+package com.example.Student.service.impl;
+
+	import java.util.List;
+
+	import org.springframework.stereotype.Service;
+
+	import com.example.Student.service.StudentService;
+	import com.example.Student.entity.Student;
+	import com.example.Student.repository.StudentRepository;
+
+	@Service
+	public class StudentServiceImpl implements StudentService {
+
+		private StudentRepository studentRepository;
+		   
+
+		public StudentServiceImpl(StudentRepository studentRepository) {
+			super();
+			this.studentRepository = studentRepository;
+		}
+
+
+		@Override
+		public List<Student> getAllStudents() {
+		
+			return studentRepository.findAll();
+		}
+		@Override
+		public Student saveStudent(Student student) {
+			// TODO Auto-generated method stub
+			return studentRepository.save(student);
+	}
+		@Override
+		public Student getStudentById(int id) {
+			// TODO Auto-generated method stub
+			return studentRepository.findById(id).get();
+		}
+
+
+		@Override
+		public Student updateStudent(Student student) {
+			// TODO Auto-generated method stub
+			return  studentRepository.save(student);
+		}
+		@Override
+		public void deleteStudentById(int id) {
+			studentRepository.deleteById(id);
+		}
+		}
+
+
