@@ -1,0 +1,483 @@
+package com.example.Employee;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class EmployeeApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(EmployeeApplication.class, args);
+	}
+
+}
+package com.example.Employee.Controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.Employee.Exception.ResourceNotFoundException;
+import com.example.Employee.Model.Employee;
+import com.example.Employee.Repository.EmployeeRepository;
+
+@RestController
+@RequestMapping("/api/v1/")
+
+
+public class EmployeeController {
+	
+	@Autowired
+	
+	private EmployeeRepository employeeRepository;
+	//get all employees
+	@GetMapping("/employees")
+	public List<Employee>getAllEmployees(){
+		return employeeRepository.findAll();
+		
+		
+	}
+	// create employee rest api
+	@PostMapping("/employees")
+	public Employee createEmployee(@RequestBody Employee employee) {
+		return employeeRepository.save(employee);
+	}
+	// get employee by id rest api
+	@GetMapping("/employees/{id}")
+public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
+		
+		Employee employee= employeeRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Employee not exist with id:"+ id));
+		return ResponseEntity.ok(employee);
+	}
+}
+package com.example.Employee.Exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(value=HttpStatus.NOT_FOUND)
+public class ResourceNotFoundException extends RuntimeException{
+	private static final long serialVersionUID=1L;
+	
+	
+	public ResourceNotFoundException(String message) {
+		super(message);
+	}
+	
+	
+	
+
+}
+package com.example.Employee.Model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name="Employee")
+public class Employee {
+	
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private long id;
+	
+	@Column(name="first_name")
+	private String firstName;
+	
+	@Column(name="last_name")
+	private String lastName;
+	
+	@Column(name="Email_Id")
+	private String EmailId;
+	
+	public Employee (){
+	
+	}
+		
+	public Employee(String firstName, String lastName, String emailId) {
+		super();
+		this.firstName = firstName;
+		this.lastName = lastName;
+		EmailId = emailId;
+	}
+
+    public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getEmailId() {
+		return EmailId;
+	}
+
+	public void setEmailId(String emailId) {
+		EmailId = emailId;
+	}
+
+	}
+
+package com.example.Employee.Repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.example.Employee.Model.Employee;
+@Repository
+public interface EmployeeRepository extends JpaRepository<Employee,Long>{
+
+}
+import React,{Component} from "react"
+import EmployeeService from "./services/EmployeeService";
+class CreateEmployeeComponent extends Component{
+    constructor(props){
+        super(props)
+        this.state = {
+            firstName:'',
+            lastName:'',
+            emailId:'',   
+                 
+    }
+    this.changeFirstNameHandler=this.changeFirstNameHandler.bind(this);
+    this.changeLastNameHandler=this.changeLastNameHandler.bind(this);
+    this.saveEmployee=this.saveEmployee.bind(this);
+    this.changeEmailHandler=this.changeEmailHandler.bind(this);
+    
+}
+saveEmployee=(e)=>{
+    e.preventDefault();
+    let employee={firstName:this.state.firstName,lastName:this.state.lastName,emailId:this.state.emailId};
+    console.log('employee =>'+JSON.stringify(employee));
+
+    EmployeeService.createEmployee(employee).then(res=>{
+        this.props.history.push('/employees');
+    });
+}
+changeFirstNameHandler=(event) => {
+    this.setState({firstName:event.target.value});
+
+}
+changeLastNameHandler=(event) => {
+    this.setState({lastName:event.target.value});
+}
+changeEmailHandler=(event) => {
+    this.setState({emailId:event.target.value});
+}
+cancel(){
+    this.props.history.push('/employees');
+
+}
+    render(){
+        return(
+            <div>
+                <div className="container">
+                    <div className="row">
+                        <div className="card col-md-6 offset-md-3 offset-md-3">
+                            <h3 className="text-center ">Add Employee</h3>
+                            <div className="card-body">
+                    <form>
+
+                                    <div className="form-group">
+                                        <label>First Name:</label>
+                                        <input placeholder="First Name" name="firstName" className="form-control"
+                                           value={this.state.firstName}onChange={this.changeFirstNameHandler}/>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Last Name:</label>
+                                        <input placeholder="Last Name" name="lastName" className="form-control"
+                                           value={this.state.lastName}onChange={this.changeLastNameHandler}/>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Email Id:</label>
+                                        <input placeholder="Email Address" name="emailId" className="form-control"
+                                           value={this.state.emailId}onChange={this.changeEmailHandler}/>
+                                </div>
+                                <button className="btn btn-success"onClick={this.saveEmployee}>Save</button>
+                                <button className="btn btn-danger"onClick={this.cancel.bind(this)}style={{marginLeft:"10px"}}>Cancel</button>
+                                
+
+                                </form>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        )
+    }
+}
+export default CreateEmployeeComponent
+
+
+import React ,{Component}from 'react'
+class FooterComponent extends Component{
+    constructor(props){
+        super(props)
+        this.state={
+
+        }
+    }
+    render(){
+        return(
+            <div>
+            <footer classname="footer">
+                <span className="text-muted">All Rights Reserved 2029@javaguide </span>
+                
+            </footer>
+        </div>
+
+        )
+        
+    }
+}
+export default FooterComponent
+
+import React,{Component} from 'react'
+class HeaderComponent extends Component{
+    constructor(props){
+        super(props)
+        this.state={
+
+        }
+    }
+    render(){
+        return(
+            <div>
+                <header>
+                    <nav class Name="navbar navbar-expand-md navbar-dark bg-dark">
+                        <div>
+                            <a href="http://javaguides.net" className="navbar-brand">Employee Management App</a></div>
+                    </nav>
+                </header>
+            </div>
+        )
+    }
+}
+ export default HeaderComponent
+
+import React,{ Component } from "react"; 
+import EmployeeService from "./services/EmployeeService";
+import {withRouter} from 'react-router-dom';
+
+ class ListEmployeeComponent extends Component
+{
+ constructor(props)
+ {
+    super(props)
+    this.state={
+        employees:[]
+    }
+    this.addEmployee=this.addEmployee.bind(this);
+    this.editEmployee=this.editEmployee.bind(this);
+    this.deleteEmployee=this.deleteEmployee.bind(this);
+}
+deleteEmployee(id){
+    EmployeeService.deleteEmployee(id).then(res=>{
+    this.setState({employees:this.state.employees.filter(employee=>employee.id!==id)});
+    });
+
+}
+ViewEmployee(id){
+    this.props.history.push(`/view-employee/${id}`);
+}
+editEmployee(id){
+    this.props.history.push(`/update-employee/${id}`);
+
+}
+    
+    componentDidMount()
+    {
+        EmployeeService.getEmployee().then((res) =>
+        {
+            this.setState({employees:res.data});
+        });
+    }
+    addEmployee(){
+        this.props.history.push('/add-employee/:id');
+    }
+    render()
+    {
+        return(
+            <div>
+                <h2 className="text-center"> Employee List</h2>
+               
+                    <button className="btn btn-primary btn-size-xs" onClick={this.addEmployee}>Add Employee</button>
+                 
+                <div className="row">
+                    <table className="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th> Employee Fisrt Name</th>
+                                <th> Employee Last Name</th>
+                                <th>Employee Email Id</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    this.state.employees.map(
+                                        employee =>
+                                        <tr key={employee.id}>
+
+                                            <td> {employee.first_name}</td>
+                                            <td> {employee.last_name}</td>
+                                            <td>{employee.email_id}</td>
+                                            <td>
+                                            <button onClick={()=> this.editEmployee(employee.id)}className="btn btn-info">Upadate</button>
+                                            <button style={{marginLeft:"10px"}} onClick={()=> this.deleteEmployee(employee.id)}className="btn btn-danger">Delete</button>
+                                            <button style={{marginLeft:"10px"}} onClick={()=> this.ViewEmployee(employee.id)}className="btn btn-info">View</button>
+                                            
+                                                </td>
+                                        </tr>
+
+                                    )
+                                }
+                            </tbody>
+                    </table>
+
+
+
+                </div>
+            </div>
+        )
+    }
+        
+}
+export default  withRouter(ListEmployeeComponent)
+
+
+import React,{Component}from 'react'
+import EmployeeService from './services/EmployeeService';
+  export  default class UpdateEmployeeComponent extends Component
+  {
+    constructor (props){
+        super(props)
+
+        this.state={
+            id:this.props.match.params.id,
+            firstName:'',
+            lastName:'',
+            emailId:''
+
+
+        }
+        this.changeFirstNameHandler=this.changeFirstNameHandler.bind(this);
+        this.changeLastNameHandler=this.changeLastNameHandler.bind(this);
+        this.updateEmployee=this.updateEmployee.bind(this);
+        
+
+    }
+    componentDidMount(){
+        EmployeeService.getEmployeeById(this.state.id).then((res) => {
+            let employee =res.data;
+            this.setState({firstName:employee.firstName,
+            lastName:employee.lastName,
+            emailId:employee.emailId});
+        });
+
+    }
+    
+
+updateEmployee=(e)=>{
+        e.preventDefault();
+        let employee={first_name:this.state.firstName,last_name:this.state.lastName,email_id:this.state.emailId};
+        console.log('employee=>'+JSON.stringify(employee));
+        EmployeeService.updateEmployee(employee,this.state.id).then(res=>{
+            this.props.history.push('/employees');
+        });
+
+
+    }
+      changeFirstNameHandler=(event)=>{
+        this.setState({firstName:event.target.value});
+    }
+
+    changeLastNameHandler=(event)=>{
+        this.setState({lastName:event.target.value});
+    }
+
+    changeEmailHandler=(event)=>{
+            this.setState({emailId:event.target.value});
+        }
+        cancel() {
+            this.props.history.push('/employees');
+        }
+render() {
+    return(
+        <div>
+            <br></br>
+            <div className="container">
+                <div className="row">
+                    <div className="card col-md-6 offset-md-3 offset-md-3">
+                        <h3 className="text-center">update Employee</h3>
+                        <div className="card-body">
+                            <form>
+                                <div class="form-group">
+                                    <label> FirstName:</label>
+                                    <input placeholder="First Name" type="text" name="firstName"className="form-control"
+                                    value={this.state.firstName}onChange={this.changeFirstNameHandler}/>
+                                    </div>
+
+                                    <div class="form-group">
+                                    <label> LastName:</label>
+                                    <input placeholder="Last Name" type="text" name="lastName"className="form-control"
+                                    value={this.state.lastName}onChange={this.changeLastNameHandler}/>
+                                    </div>
+
+                                    <div class="form-group">
+                                    <label> EmailId:</label>
+                                    <input placeholder="EmailId" type="text" name="emailid"className="form-control"
+                                    value={this.state.emailId}onChange={this.changeEmailHandler}/>
+                                    </div>
+
+                            <button className="btn btn-success"onClick ={this.updateEmployee}>Save</button>
+                            <button className="btn btn-danger"onClick ={this.cancel.bind(this)} style={{marginLeft:"10px"}}>cancel</button>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    )
+}
+
+  }
+
+
